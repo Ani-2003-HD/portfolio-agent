@@ -466,9 +466,14 @@ Remember: Respond with ONLY the JSON object, no other text.
             # Insert at beginning of projects array
             if "const projects = [" in content:
                 insertion_point = content.find("const projects = [") + len("const projects = [")
+                # Find the first opening brace after the array declaration
+                brace_pos = content.find("[", insertion_point)
+                if brace_pos != -1:
+                    insertion_point = brace_pos + 1
+                
                 updated_content = (
                     content[:insertion_point] +
-                    f"\n  {new_project}," +
+                    f"\n    {new_project}," +
                     content[insertion_point:]
                 )
                 
@@ -477,6 +482,9 @@ Remember: Respond with ONLY the JSON object, no other text.
                 
                 self.logger.info("Portfolio updated")
                 return True
+            else:
+                self.logger.error("Could not find 'const projects = [' in portfolio file")
+                return False
         except Exception as e:
             self.logger.error(f"Portfolio update failed: {e}")
         return False
