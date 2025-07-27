@@ -188,7 +188,7 @@ Respond with ONLY this JSON format:
     "technologies": ["tech1", "tech2", "tech3"],
     "bullet_points": [
         "Specific technical feature 1",
-        "Specific technical feature 2", 
+        "Specific technical feature 2",
         "Specific technical feature 3"
     ],
     "special_features": [
@@ -204,7 +204,7 @@ Focus on:
 - Technical complexity and achievements
 - Avoid generic descriptions like "modern development practices"
 
-Remember: Respond with ONLY the JSON object, no other text.
+CRITICAL: You must respond with ONLY the JSON object. Do not include any explanatory text, markdown formatting, or other content. Just the JSON.
 """
         
         try:
@@ -567,18 +567,24 @@ Remember: Respond with ONLY the JSON object, no other text.
             with open(resume_file, 'r') as f:
                 content = f.read()
             
-            # Simple regex to find project names in resume
-            # This is a basic implementation - you may need to customize based on your HTML structure
+            # Look for project titles in the resume HTML structure
             import re
-            project_matches = re.findall(r'<h[3-6][^>]*>([^<]+)</h[3-6]>', content)
+            # Pattern to match <div class="project-title">Project Name</div>
+            project_matches = re.findall(r'<div class="project-title">([^<]+)</div>', content)
             
-            # Filter for likely project names (not section headers)
-            projects = []
-            for match in project_matches:
-                if len(match.strip()) > 3 and not any(word in match.lower() for word in ['experience', 'education', 'skills', 'contact']):
-                    projects.append(match.strip())
+            # If no project-title matches found, try alternative patterns
+            if not project_matches:
+                # Try h3-h6 tags as fallback
+                project_matches = re.findall(r'<h[3-6][^>]*>([^<]+)</h[3-6]>', content)
+                
+                # Filter for likely project names (not section headers)
+                filtered_matches = []
+                for match in project_matches:
+                    if len(match.strip()) > 3 and not any(word in match.lower() for word in ['experience', 'education', 'skills', 'contact', 'projects', 'key']):
+                        filtered_matches.append(match.strip())
+                project_matches = filtered_matches
             
-            return projects[:3]  # Return max 3 projects
+            return project_matches[:3]  # Return max 3 projects
         except Exception as e:
             self.logger.error(f"Error reading resume projects: {e}")
             return []
